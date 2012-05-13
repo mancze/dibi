@@ -252,6 +252,7 @@ interface IDibiTypeConverter
 	 * @param DibiConnection $connection
 	 * @throws InvalidStateException when connection is injected multiple times
 	 * @throws InvalidArgumentException when empty argument is passed
+	 * @return void
 	 */
 	public function injectConnection(DibiConnection $connection);
 	
@@ -261,6 +262,7 @@ interface IDibiTypeConverter
 	 * 
 	 * @param mixed $dbValue value retrieved from database
 	 * @param DibiColumnInfo $context column info of the value
+	 * @return bool true if value can be converted, false otherwise
 	 */
 	public function canConvertFrom($dbValue, DibiColumnInfo $context);
 	
@@ -270,6 +272,7 @@ interface IDibiTypeConverter
 	 * 
 	 * @param mixed $value value passed to dibi from user's code
 	 * @param string $context modifier to which should be value converted
+	 * @return bool true if value can be converted, false otherwise
 	 */
 	public function canConvertTo($value, $context = null);
 	
@@ -279,6 +282,7 @@ interface IDibiTypeConverter
 	 * 
 	 * @param mixed $dbValue value retrieved from database
 	 * @param DibiColumnInfo $context column info of the value
+	 * @return mixed converted value
 	 * @throws DibiNotSupportedException when conversion is invalid
 	 */
 	public function convertFrom($dbValue, DibiColumnInfo $context);
@@ -294,6 +298,7 @@ interface IDibiTypeConverter
 	 * 
 	 * @param mixed $value value retrieved from database
 	 * @param string $context dibi modifier to which value should convert
+	 * @return mixed converted value
 	 * @throws DibiNotSupportedException when conversion is invalid
 	 */
 	public function convertTo($value, &$context = null);

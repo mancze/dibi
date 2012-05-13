@@ -41,6 +41,9 @@ class DibiResult extends DibiObject implements IDataSource
 {
 	/** @var array  IDibiResultDriver */
 	private $driver;
+	
+	/** @var IDibiTypeConverter */
+	private $typeConverter;
 
 	/** @var array  Translate table */
 	private $types = array();
@@ -62,9 +65,10 @@ class DibiResult extends DibiObject implements IDataSource
 	/**
 	 * @param  IDibiResultDriver
 	 */
-	public function __construct($driver)
+	public function __construct($driver, IDibiTypeConverter $converter = null)
 	{
 		$this->driver = $driver;
+		$this->typeConverter = $converter;
 		$this->detectTypes();
 	}
 
@@ -508,7 +512,12 @@ class DibiResult extends DibiObject implements IDataSource
 				continue;
 			}
 			$value = $row[$key];
-			if ($value === FALSE || $type === dibi::TEXT) {
+			$columnInfo = $this->getInfo()->getColumn($key);
+			
+			if ($this->typeConverter !== null && $this->typeConverter->canConvertFrom($value, $columnInfo)) {
+				$row[$key] = $this->typeConverter->convertFrom($value, $columnInfo);
+				
+			} elseif ($value === FALSE || $type === dibi::TEXT) {
 
 			} elseif ($type === dibi::INTEGER) {
 				$row[$key] = is_float($tmp = $value * 1) ? $value : $tmp;

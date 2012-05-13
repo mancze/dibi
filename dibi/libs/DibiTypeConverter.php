@@ -24,6 +24,7 @@ class DibiTypeConverter extends DibiObject implements IDibiTypeConverter
 	 * @param DibiConnection $connection
 	 * @throws InvalidStateException when connection is injected multiple times
 	 * @throws InvalidArgumentException when empty argument is passed
+	 * @return void
 	 */
 	public function injectConnection(DibiConnection $connection) {
 		if (!empty($this->connection)) {
@@ -43,6 +44,7 @@ class DibiTypeConverter extends DibiObject implements IDibiTypeConverter
 	 * 
 	 * @param mixed $dbValue value retrieved from database
 	 * @param DibiColumnInfo $context column info of the value
+	 * @return bool true if value can be converted, false otherwise
 	 */
 	public function canConvertFrom($dbValue, DibiColumnInfo $context)
 	{
@@ -55,6 +57,7 @@ class DibiTypeConverter extends DibiObject implements IDibiTypeConverter
 	 * 
 	 * @param mixed $value value passed to dibi from user's code
 	 * @param string $context modifier to which should be value converted
+	 * @return mixed converted value
 	 */
 	public function canConvertTo($value, $context = null)
 	{
@@ -67,6 +70,7 @@ class DibiTypeConverter extends DibiObject implements IDibiTypeConverter
 	 * 
 	 * @param mixed $dbValue value retrieved from database
 	 * @param DibiColumnInfo $context column info of the value
+	 * @return bool true if value can be converted, false otherwise
 	 */
 	public function convertFrom($dbValue, DibiColumnInfo $context)
 	{
@@ -84,6 +88,7 @@ class DibiTypeConverter extends DibiObject implements IDibiTypeConverter
 	 * 
 	 * @param mixed $value value retrieved from database
 	 * @param string $context dibi modifier to which value should convert
+	 * @return mixed converted value
 	 */
 	public function convertTo($value, &$context = null)
 	{
