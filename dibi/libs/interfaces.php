@@ -233,3 +233,69 @@ interface IDibiReflector
 	function getForeignKeys($table);
 
 }
+
+
+
+/**
+ * dibi type conversion.
+ *
+ * @author     Michal Novák
+ * @package    dibi
+ */
+interface IDibiTypeConverter
+{
+	
+	/**
+	 * Used for DibiConnection injection. This method should be called once and it should ensure
+	 * that.
+	 * 
+	 * @param DibiConnection $connection
+	 * @throws InvalidStateException when connection is injected multiple times
+	 * @throws InvalidArgumentException when empty argument is passed
+	 */
+	public function injectConnection(DibiConnection $connection);
+	
+	
+	/**
+	 * Tests if converter is capable of conversion of database value to its originated value.
+	 * 
+	 * @param mixed $dbValue value retrieved from database
+	 * @param DibiColumnInfo $context column info of the value
+	 */
+	public function canConvertFrom($dbValue, DibiColumnInfo $context);
+	
+	
+	/**
+	 * Tests if converter is capable of conversion of value to its database value (value for SQL).
+	 * 
+	 * @param mixed $value value passed to dibi from user's code
+	 * @param string $context modifier to which should be value converted
+	 */
+	public function canConvertTo($value, $context = null);
+	
+	
+	/**
+	 * Converts database value to it's true type.
+	 * 
+	 * @param mixed $dbValue value retrieved from database
+	 * @param DibiColumnInfo $context column info of the value
+	 * @throws DibiNotSupportedException when conversion is invalid
+	 */
+	public function convertFrom($dbValue, DibiColumnInfo $context);
+	
+	
+	/**
+	 * Converts value from user's code (any object) to SQL value as it will appear in query.
+	 * 
+	 * In addition method may change context (dibi modifier of the value). This allows the user
+	 * to pass custom modifiers to dibi to hint user's type converter.
+	 * 
+	 * Modifier might be not passed.
+	 * 
+	 * @param mixed $value value retrieved from database
+	 * @param string $context dibi modifier to which value should convert
+	 * @throws DibiNotSupportedException when conversion is invalid
+	 */
+	public function convertTo($value, &$context = null);
+	
+}

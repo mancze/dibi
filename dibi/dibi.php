@@ -111,6 +111,9 @@ class dibi
 	/** @var string  Default dibi driver */
 	public static $defaultDriver = 'mysql';
 
+	/** @var string default type converter */
+	public static $defaultTypeConverter = "DibiTypeConverter";
+
 
 
 	/**

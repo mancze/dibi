@@ -21,6 +21,9 @@ final class DibiTranslator extends DibiObject
 {
 	/** @var DibiConnection */
 	private $connection;
+	
+	/** @var IDibiTypeConverter */
+	private $typeConverter;
 
 	/** @var IDibiDriver */
 	private $driver;
@@ -54,9 +57,10 @@ final class DibiTranslator extends DibiObject
 
 
 
-	public function __construct(DibiConnection $connection)
+	public function __construct(DibiConnection $connection, IDibiTypeConverter $converter = null)
 	{
 		$this->connection = $connection;
+		$this->typeConverter = $converter;
 	}
 
 
@@ -327,6 +331,10 @@ final class DibiTranslator extends DibiObject
 			}
 		}
 
+		// is there type converter?
+		if ($this->typeConverter !== null && $this->typeConverter->canConvertTo($value, $modifier)) {
+			$value = $this->typeConverter->convertTo($value, $modifier);
+		}
 
 		// with modifier procession
 		if ($modifier) {
@@ -443,7 +451,7 @@ final class DibiTranslator extends DibiObject
 
 		} elseif ($value === NULL) {
 			return 'NULL';
-
+			
 		} elseif ($value instanceof DateTime) {
 			return $this->driver->escape($value, dibi::DATETIME);
 

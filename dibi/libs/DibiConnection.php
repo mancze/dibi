@@ -37,6 +37,9 @@ class DibiConnection extends DibiObject
 
 	/** @var DibiTranslator */
 	private $translator;
+	
+	/** @var IDibiTypeConverter */
+	private $typeConverter;
 
 	/** @var bool  Is connected? */
 	private $connected = FALSE;
@@ -88,6 +91,10 @@ class DibiConnection extends DibiObject
 		if (!isset($config['driver'])) {
 			$config['driver'] = dibi::$defaultDriver;
 		}
+		
+		if (!isset($config["typeConverter"])) {
+			$config["typeConverter"] = dibi::$defaultTypeConverter;
+		}
 
 		$driver = preg_replace('#[^a-z0-9_]#', '_', strtolower($config['driver']));
 		$class = "Dibi" . $driver . "Driver";
@@ -102,7 +109,24 @@ class DibiConnection extends DibiObject
 		$config['name'] = $name;
 		$this->config = $config;
 		$this->driver = new $class;
-		$this->translator = new DibiTranslator($this);
+		
+		// type converter
+		if (!empty($config["typeConverter"])) {
+			$converterClass = $config["typeConverter"];
+			$converterInstance = new $converterClass();
+			
+			if (!($converterInstance instanceof IDibiTypeConverter)) {
+				throw new DibiException("Class-type `{$converterClass}` of type converter does not implement IDibiTypeConverter.");
+			}
+			
+			// inject connection
+			$converterInstance->injectConnection($this);
+			
+			// keep reference
+			$this->typeConverter = $converterInstance;
+		}
+		
+		$this->translator = new DibiTranslator($this, $this->typeConverter);
 
 		// profiler
 		$profilerCfg = & $config['profiler'];
