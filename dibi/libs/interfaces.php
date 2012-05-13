@@ -245,17 +245,6 @@ interface IDibiReflector
 interface IDibiTypeConverter
 {
 	
-	/**
-	 * Used for DibiConnection injection. This method should be called once and it should ensure
-	 * that.
-	 * 
-	 * @param DibiConnection $connection
-	 * @throws InvalidStateException when connection is injected multiple times
-	 * @throws InvalidArgumentException when empty argument is passed
-	 * @return void
-	 */
-	public function injectConnection(DibiConnection $connection);
-	
 	
 	/**
 	 * Tests if converter is capable of conversion of database value to its originated value.
@@ -302,5 +291,29 @@ interface IDibiTypeConverter
 	 * @throws DibiNotSupportedException when conversion is invalid
 	 */
 	public function convertTo($value, &$context = null);
+	
+}
+
+
+
+/**
+ * dibi type conversion.
+ *
+ * @author     Michal Novák
+ * @package    dibi
+ */
+interface IDibiNativeTypeConverter extends IDibiTypeConverter
+{
+	
+	/**
+	 * Used for DibiConnection injection. This method should be called once and it should ensure
+	 * that.
+	 * 
+	 * @param DibiConnection $connection
+	 * @throws InvalidStateException when connection is injected multiple times
+	 * @throws InvalidArgumentException when empty argument is passed
+	 * @return void
+	 */
+	public function injectConnection(DibiConnection $connection);
 	
 }

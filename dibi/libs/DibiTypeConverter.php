@@ -7,11 +7,17 @@
  * @author     Michal Novák
  * @package    dibi
  */
-class DibiTypeConverter extends DibiObject implements IDibiTypeConverter
+class DibiTypeConverter extends DibiObject implements IDibiNativeTypeConverter
 {
 	
 	/** @var DibiConnection */
 	protected $connection = null;
+	
+	/** @var array|ArrayAccess cache of to conversion table */
+	private $toConversionTable = array();
+	
+	/** @var array|ArrayAccess cache of from conversion table */
+	private $fromConversionTable = array();
 	
 	
 	public function __construct() { }
@@ -36,6 +42,17 @@ class DibiTypeConverter extends DibiObject implements IDibiTypeConverter
 		}
 		
 		$this->connection = $connection;
+		
+		// load conversion caches
+		$config = $connection->getConfig("typeConverter");
+		
+		if (isset($config["from"])) {
+			$this->fromConversionTable = $config["from"];
+		}
+		
+		if (isset($config["to"])) {
+			$this->toConversionTable = $config["to"];
+		}
 	}
 	
 	
@@ -48,7 +65,7 @@ class DibiTypeConverter extends DibiObject implements IDibiTypeConverter
 	 */
 	public function canConvertFrom($dbValue, DibiColumnInfo $context)
 	{
-		return false;
+		return isset($this->fromConversionTable[$context->type]);
 	}
 	
 	
@@ -61,7 +78,14 @@ class DibiTypeConverter extends DibiObject implements IDibiTypeConverter
 	 */
 	public function canConvertTo($value, $context = null)
 	{
-		return false;
+		if (is_object($value)) {
+			$valueClass = get_class($value);
+			
+			return isset($this->toConversionTable[$valueClass]);
+		}
+		else {
+			return false;
+		}
 	}
 	
 	
@@ -74,6 +98,27 @@ class DibiTypeConverter extends DibiObject implements IDibiTypeConverter
 	 */
 	public function convertFrom($dbValue, DibiColumnInfo $context)
 	{
+		if (isset($this->fromConversionTable[$context->type])) {
+			$callback = $this->fromConversionTable[$context->type];
+			
+			if (is_string($callback)) {
+				if (class_exists($callback)) {
+					// ctor
+					return new $callback($dbValue);
+				}
+				else {
+					// function
+					return $callback($dbValue, $context);
+				}
+			}
+			else {
+				// NOTE: must use array_values as converted array is not indexed
+				// and nonindex arrays are not valid callbacks
+				$callback = array_values((array) $callback);
+				return call_user_func($callback, $dbValue, $context);
+			}
+		}
+		
 		throw new DibiNotSupportedException();
 	}
 	
@@ -92,6 +137,36 @@ class DibiTypeConverter extends DibiObject implements IDibiTypeConverter
 	 */
 	public function convertTo($value, &$context = null)
 	{
+		if (is_object($value)) {
+			$valueClass = get_class($value);
+			
+			if (!isset($this->toConversionTable[$valueClass])) {
+				throw new DibiNotSupportedException();
+			}
+			
+			$method = $this->toConversionTable[$valueClass];
+			
+			if (is_string($method)) {
+				// invoke method on value
+				return $value->$method();
+			}
+			else {
+				// NOTE: must use array_values as converted array is not indexed
+				// and nonindex arrays are not valid callbacks
+				$method = array_values((array) $method);
+				
+				if (count($method) == 1) {
+					$method = array_pop($method);
+				}
+				else {
+					// ensure autoload
+					class_exists($method[0]);
+				}
+				
+				return call_user_func($method, $value, $context);
+			}
+		}
+		
 		throw new DibiNotSupportedException();
 	}
 	

@@ -91,10 +91,6 @@ class DibiConnection extends DibiObject
 		if (!isset($config['driver'])) {
 			$config['driver'] = dibi::$defaultDriver;
 		}
-		
-		if (!isset($config["typeConverter"])) {
-			$config["typeConverter"] = dibi::$defaultTypeConverter;
-		}
 
 		$driver = preg_replace('#[^a-z0-9_]#', '_', strtolower($config['driver']));
 		$class = "Dibi" . $driver . "Driver";
@@ -112,20 +108,37 @@ class DibiConnection extends DibiObject
 		
 		// type converter
 		if (!empty($config["typeConverter"])) {
-			$converterClass = $config["typeConverter"];
-			$converterInstance = new $converterClass();
-			
-			if (!($converterInstance instanceof IDibiTypeConverter)) {
-				throw new DibiException("Class-type `{$converterClass}` of type converter does not implement IDibiTypeConverter.");
+			if (is_array($config["typeConverter"])) {
+				if (isset($config["typeConverter"]["class"])) {
+					$typeConverterClass = $config["typeConverter"]["class"];
+				}
+				else {
+					$typeConverterClass = dibi::$defaultTypeConverter;
+				}
+			}
+			else {
+				$typeConverterClass = $config["typeConverter"];
 			}
 			
-			// inject connection
-			$converterInstance->injectConnection($this);
+			if (!class_exists($typeConverterClass)) {
+				throw new DibiException("Unable to create instance of type converter '$typeConverterClass'.");
+			}
+			
+			$converterInstance = new $typeConverterClass();
+			
+			if ($converterInstance instanceof IDibiNativeTypeConverter) {
+				// inject connection
+				$converterInstance->injectConnection($this);
+			}
+			elseif (!($converterInstance instanceof IDibiTypeConverter)) {
+				throw new DibiException("Class-type `{$typeConverterClass}` of type converter does not implement IDibiTypeConverter.");
+			}
 			
 			// keep reference
 			$this->typeConverter = $converterInstance;
 		}
 		
+		// translator
 		$this->translator = new DibiTranslator($this, $this->typeConverter);
 
 		// profiler
@@ -269,6 +282,17 @@ class DibiConnection extends DibiObject
 	{
 		$this->connected || $this->connect();
 		return $this->driver;
+	}
+
+
+
+	/**
+	 * Returns the type converter.
+	 * @return IDibiTypeConverter or null
+	 */
+	final public function getTypeConverter()
+	{
+		return $this->typeConverter;
 	}
 
 
